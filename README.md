@@ -1,6 +1,6 @@
 # Wave
 
-A horizontally distributed ledger. Wave builds on two key components:
+A horizontally distributed ledger. Wave builds on a few key components:
 
 1. It implements the invariants and data structures necessary to do simple double-entry accounting using
  postgreSQL as a storage layer.
@@ -9,7 +9,7 @@ A horizontally distributed ledger. Wave builds on two key components:
 
 ## High Level Goals
 
-- There are two nodes - a single leader and one follower
+- There are three nodes - a single leader and two followers
 - It will accept writes (CREATE TABLE, INSERT) on the leader and
 - accept reads (SELECT) on any node. All nodes will always contain the same data.
 - Supported Ledger Operations:
@@ -20,11 +20,11 @@ A horizontally distributed ledger. Wave builds on two key components:
 4. add a DR entry
 5. retrieve a balance
 
-## Setup
+## Postgres Setup
 
 Using the `docker-compose up` OR
 
-The application must be able to connect to two postgres databases called `wave_ledger`. Via psql:
+The application must be able to connect to three postgres instances with a database called `wave_ledger` on ports `5432`, `5433`, `5344`. Via psql:
 
 ```zsh
 psql -U user -p 5432
@@ -32,12 +32,18 @@ postgres=# CREATE DATABASE wave_ledger;
 CREATE DATABASE
 ```
 
-and a follower:
+## Node Setup
+In three seperate terminals:
+```
+iex --name wave-one@127.0.0.1 --cookie wave -S mix
+```
 
-```zsh
-psql -U user -p 5433
-postgres=# CREATE DATABASE wave_ledger;
-CREATE DATABASE
+```
+iex --name wave-two@127.0.0.1 --cookie wave -S mix
+```
+
+```
+iex --name wave-three@127.0.0.1 --cookie wave -S mix
 ```
 
 ## Installation

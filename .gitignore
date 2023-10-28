@@ -28,3 +28,9 @@ wave-*.tar
 .envrc
 
 .elixir_ls
+
+./postgres
+
+./postgres-two
+
+./postgres-three

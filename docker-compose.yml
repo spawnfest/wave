@@ -1,16 +1,61 @@
 version: "3"
 services:
- postgres:
-    image: "postgres:alpine3.18"
-    command: postgres -c 'max_connections=200'
-    ports:
-      - "5432:5432"
-      - "5433:5433"
+  # primary-node:
+  #   image: "wave-primary"
+  #   build:
+  #     context: .
+  #     dockerfile: ./Dockerfile
+  #   hostname: "wave-primary"
+  #   ports:
+  #     - "4361:4369"
+
+  # secondary-node:
+  #   image: "wave-secondary"
+  #   build:
+  #     context: .
+  #     dockerfile: ./Dockerfile
+  #   entrypoint: ["iex", "-sname", "wave_one", "mix", "run"]
+  #   hostname: "wave-secondary"
+  #   ports:
+  #     - "4362:4369"
+
+  postgres:
+    image: "postgres:15.3-alpine3.18"
+    command: postgres -c 'max_connections=100'
     environment:
       - POSTGRES_PASS=postgres
       - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
     volumes:
-      - 'postgres_data:/pgdata'
+      - 'postgres_primary_data:/pgdata'
+    hostname: "wave_db"
+
+  postgres-two:
+    image: "postgres:15.3-alpine3.18"
+    command: postgres -c 'max_connections=100'
+    environment:
+      - POSTGRES_PASS=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - 'postgres_secondary_one_data:/pgdata'
+    hostname: "wave_db"
+  
+  postgres-three:
+    image: "postgres:15.3-alpine3.18"
+    command: postgres -c 'max_connections=100'
+    environment:
+      - POSTGRES_PASS=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - 'postgres_secondary_two_data:/pgdata'
+    hostname: "wave_db"
 
 volumes:
-  postgres_data:
+  postgres_primary_data:
+  postgres_secondary_one_data:
+  postgres_secondary_two_data:
