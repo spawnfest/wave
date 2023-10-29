@@ -29,10 +29,11 @@ wave-*.tar
 
 .elixir_ls
 
+# Ignore database filesystem
 ./postgres
-
 ./postgres-two
-
 ./postgres-three
 
+# Ignore cluster data
 /wave-one@127.0.0.1
+nonode@nohost
