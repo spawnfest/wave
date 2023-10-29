@@ -5,16 +5,16 @@ defmodule Wave.StateMachine do
 
   # Client API
   def get(server_id, key) do
-    :ra.process_command(server_id, {:get, key})
+    :ra.process_command(server_id, {:get_transaction, key})
   end
 
   def put(server_id, key, value) do
+    #state = %{cr: cr, dr: dr, amount: amount, type: type, desc: desc}
     :ra.process_command(server_id, {:put, key, value})
   end
 
   # Cluster Management
   def start do
-    :ra.start()
     members = get_active_nodes()
     machine_config = {__MODULE__, %{}}
 
@@ -26,14 +26,40 @@ defmodule Wave.StateMachine do
     %{}
   end
 
-  def apply(_command_meta_data, {:get, key}, state) do
-    result = Map.get(state, key, :not_found)
+  def apply(_command_meta_data, {:get_transaction, id}, state) do
+    query = "SELECT id FROM ledger_transactions WHERE id = $1"
 
-    {state, result}
+    result =
+      Postgrex.transaction(:wave_ledger, fn conn ->
+        Postgrex.query(conn, query, [id])
+      end)
+
+    case result do
+      {:ok, %Postgrex.Result{rows: rows}} -> {state, rows}
+      {:error, _e} -> {state, :not_found}
+    end
   end
 
-  def apply(_command_meta_data, {:put, key, value}, state) do
-    {Map.put(state, key, value), :inserted}
+  def apply(_command_meta_data, {:put, id, transition}, state) do
+    %{cr: cr, dr: dr, amount: amount, type: type, desc: desc} = transition
+
+    query = """
+    INSERT INTO ledger_transactions
+    (cr_account_id, dr_account_id, amount, ledger_type, timestamp, description)
+    VALUES ($1, $1, $1, $1, $1, $1)
+    """
+
+    timestamp = DateTime.utc_now() |> DateTime.to_unix()
+
+    result =
+      Postgrex.transaction(:wave_ledger, fn conn ->
+        Postgrex.query(conn, query, [cr, dr, amount, type, timestamp, desc])
+      end)
+
+    case result do
+      {:ok, %Postgrex.Result{rows: rows}} -> {state, rows}
+      {:error, _e} -> {state, :not_found}
+    end
   end
 
   def get_active_nodes do
