@@ -46,7 +46,7 @@ defmodule Wave.StateMachine do
     query = """
     INSERT INTO ledger_transactions
     (cr_account_id, dr_account_id, amount, ledger_type, timestamp, description)
-    VALUES ($1, $1, $1, $1, $1, $1)
+    VALUES ($1, $2, $3, $4, $5, $6)
     """
 
     timestamp = DateTime.utc_now() |> DateTime.to_unix()
@@ -58,6 +58,7 @@ defmodule Wave.StateMachine do
 
     case result do
       {:ok, %Postgrex.Result{rows: rows}} -> {state, rows}
+      {:error, :rollback} -> raise "oh no transaction rollback"
       {:error, _e} -> {state, :not_found}
     end
   end
