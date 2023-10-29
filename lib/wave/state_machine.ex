@@ -14,13 +14,11 @@ defmodule Wave.StateMachine do
 
   # Cluster Management
   def start do
+    :ra.start()
     members = get_active_nodes()
-    machine_config = [:module, __MODULE__, %{}]
+    machine_config = {__MODULE__, %{}}
 
-    :ra.start_cluster(:wave_ledger, machine_config, members)
-  end
-
-  def replace_member do
+    :ra.start_cluster(:default, "wave_ledger", machine_config, members)
   end
 
   # State Machine
@@ -28,7 +26,7 @@ defmodule Wave.StateMachine do
     %{}
   end
 
-  def apply(_command_meta_data, {:get, key},  state) do
+  def apply(_command_meta_data, {:get, key}, state) do
     result = Map.get(state, key, :not_found)
 
     {state, result}
@@ -38,9 +36,12 @@ defmodule Wave.StateMachine do
     {Map.put(state, key, value), :inserted}
   end
 
-  defp get_active_nodes do
+  def get_active_nodes do
+    true = Node.connect(:"wave-two@127.0.0.1")
+    true = Node.connect(:"wave-three@127.0.0.1")
+
     Node.list()
-    |> Enum.zip([1, 2, 3])
-    |> Enum.map(fn {n, hostname} -> {:"ledger#{n}", hostname} end)
+    |> Enum.zip([1, 2])
+    |> Enum.map(fn {hostname, n} -> {:"ledger#{n}", hostname} end)
   end
 end

@@ -34,3 +34,5 @@ wave-*.tar
 ./postgres-two
 
 ./postgres-three
+
+/wave-one@127.0.0.1
